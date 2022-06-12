@@ -1,4 +1,4 @@
-
+import datetime
 import os
 from flask import Flask, jsonify
 from flask_restful import Resource, Api, abort
@@ -89,35 +89,15 @@ class NewsAPI(MethodResource, Resource):
     )
     def get(
             self,
-            date_from: str = '2022.01.01',
-            date_to: str = '2022.03.01'
+            days: int
     ) -> dict:
         """
         Get method represents a GET API method
         """
 
-        list_of_dates = date_to.split('.')
-        print(f'{list_of_dates=}')
+        start_date = datetime.datetime.now() - datetime.timedelta(days=days)
 
-        list_of_start_dates = [
-            int(x) for x in date_from.split('.')
-        ]
-
-        start_date = date(
-            year=list_of_start_dates[0],
-            month=list_of_start_dates[1],
-            day=list_of_start_dates[2]
-        )
-
-        list_of_end_dates = [
-            int(x) for x in date_to.split('.')
-        ]
-
-        end_date = date(
-            year=list_of_end_dates[0],
-            month=list_of_end_dates[1],
-            day=list_of_end_dates[2]
-        )
+        end_date = datetime.datetime.now() + datetime.timedelta(days=365+1)
 
         news: List[NewsModel] = NewsModel.query.filter(
             NewsModel.news_date.between(
@@ -140,7 +120,7 @@ class NewsAPI(MethodResource, Resource):
         else:
             abort(
                 http_status_code=404,
-                message=f'Нет новостей между {start_date} и {end_date}'
+                message=f'В этом промежутке нет новостей'
             )
 
         return models
@@ -157,7 +137,7 @@ class NewsAPI(MethodResource, Resource):
     #     }
 
 
-api.add_resource(NewsAPI, '/test/<string:date_from>-<string:date_to>')
+api.add_resource(NewsAPI, '/test/<int:days>')
 docs.register(NewsAPI)
 
 if __name__ == '__main__':
