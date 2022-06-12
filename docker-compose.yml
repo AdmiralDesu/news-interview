@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis
+    volumes:
+      - ./app:/app
+    ports:
+      - "6379:6379"
+
+  newsflask:
+    build:
+      context: .
+    ports:
+      - "5001:5001"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - redis
