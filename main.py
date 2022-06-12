@@ -1,5 +1,7 @@
 import datetime
 import os
+import time
+
 from flask import Flask, jsonify
 from flask_restful import Resource, Api, abort
 from apispec import APISpec
@@ -45,8 +47,37 @@ app.config.update(
 docs = FlaskApiSpec(app)
 
 
-def add_news_to_db():
+def add_news_to_db_threading():
+    """
+    Запускает парсер в бесконечном цикле для обработки сайта в Threading
+    :return:
+    """
     parser = MosDay()
+
+    while True:
+        news = parser.get_all_news()
+
+        for headline in news:
+            model = NewsModel(
+                news_id=headline.id,
+                news_title=headline.title,
+                news_image=headline.cover,
+                news_date=headline.publish_date
+            )
+            db.session.add(model)
+            db.session.commit()
+            print(f'Новость с id {headline.id} записана в базу')
+        print('Обработка окончена')
+        time.sleep(600)
+
+
+def add_news_to_db():
+    """
+    Запускает парсер в бесконечном цикле для обработки сайта в Redis
+    :return:
+    """
+    parser = MosDay()
+
     news = parser.get_all_news()
 
     for headline in news:
@@ -59,6 +90,8 @@ def add_news_to_db():
         db.session.add(model)
         db.session.commit()
         print(f'Новость с id {headline.id} записана в базу')
+    print('Обработка окончена')
+
 
 
 class NewsModel(db.Model):
@@ -92,6 +125,7 @@ class NewsAPI(MethodResource, Resource):
             days: int
     ) -> dict:
         """
+        days - количество дней, за которые нужно получить новости
         Get method represents a GET API method
         """
 
@@ -125,6 +159,7 @@ class NewsAPI(MethodResource, Resource):
 
         return models
 
+    # Ненужный POST запрос
     # @doc(description='POST method', tags=['News'])
     # @use_kwargs(NewsRequestSchema, location='json')
     # @marshal_with(NewsResponseSchema)
@@ -162,6 +197,12 @@ if __name__ == '__main__':
     #     repeat=20
     # )
     # print(f'{today=}')
+
+    """
+    Если не докер, то 
+    """
+    #threading.Thread(target=add_news_to_db_threading).start()
+
 
     app.run(
         host="0.0.0.0",
