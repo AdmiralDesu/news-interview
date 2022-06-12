@@ -91,7 +91,7 @@ class NewsAPI(MethodResource, Resource):
             self,
             date_from: str = '2022.01.01',
             date_to: str = '2022.03.01'
-    ):
+    ) -> dict:
         """
         Get method represents a GET API method
         """

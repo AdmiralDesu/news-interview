@@ -44,7 +44,7 @@ class MosDay:
 
     @property
     def extract_title(self) -> str:
-        return self.bs[self.note_idx].findAll('b')[1].text
+        return ".".join(self.news_table[0].find('b').text.split('.')[::-1])
 
     @property
     def extract_description(self) -> str:
